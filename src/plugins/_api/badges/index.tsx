@@ -18,7 +18,7 @@
 
 import "./fixDiscordBadgePadding.css";
 
-import { _getBadges, BadgePosition, BadgeUserArgs, ProfileBadge } from "@api/Badges";
+import { _getBadges, addProfileBadge, BadgePosition, BadgeUserArgs, ProfileBadge, removeProfileBadge } from "@api/Badges";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
 import { Heart } from "@components/Heart";
@@ -44,16 +44,62 @@ const ContributorBadge: ProfileBadge = {
     onClick: (_, { userId }) => openContributorModal(UserStore.getUser(userId))
 };
 
-let DonorBadges = {} as Record<string, Array<Record<"tooltip" | "badge", string>>>;
+type BadgeMap = Record<string, Array<{ tooltip: string; badge?: string; }>>;
+
+let DonorBadges = {} as BadgeMap;
+let VampCordBadges = {} as BadgeMap;
+
+// VampCord's own badges, edit badges.json in the repository to give someone a badge
+const VAMPCORD_BADGES_URL = "https://raw.githubusercontent.com/iyesska/VampCord/main/badges.json";
+const VAMPCORD_BADGE_ICON = "https://raw.githubusercontent.com/iyesska/VampCord/main/assets/badge.png";
+
+const BadgeLogger = new Logger("BadgeAPI");
+
+async function fetchBadges(url: string, init: RequestInit): Promise<BadgeMap> {
+    const res = await fetch(url, init);
+    if (!res.ok) throw new Error(`${url}: ${res.status} ${res.statusText}`);
+    return res.json();
+}
 
 async function loadBadges(noCache = false) {
     const init = {} as RequestInit;
     if (noCache)
         init.cache = "no-cache";
 
-    DonorBadges = await fetch("https://badges.vencord.dev/badges.json", init)
-        .then(r => r.json());
+    // Load both lists independently, so one being unreachable doesn't break the other
+    const [donor, vampcord] = await Promise.allSettled([
+        fetchBadges("https://badges.vencord.dev/badges.json", init),
+        fetchBadges(VAMPCORD_BADGES_URL, init)
+    ]);
+
+    if (donor.status === "fulfilled") DonorBadges = donor.value;
+    else BadgeLogger.warn("Failed to load donor badges", donor.reason);
+
+    if (vampcord.status === "fulfilled") VampCordBadges = vampcord.value;
+    else BadgeLogger.warn("Failed to load VampCord badges", vampcord.reason);
 }
+
+const VampCordBadge: ProfileBadge = {
+    id: "vampcord_badges",
+    position: BadgePosition.START,
+    getBadges: ({ userId }) => VampCordBadges[userId]?.map((badge, idx) => ({
+        id: `vampcord_badge_${idx}`,
+        description: badge.tooltip,
+        iconSrc: badge.badge || VAMPCORD_BADGE_ICON,
+        props: {
+            style: {
+                borderRadius: "50%",
+                transform: "scale(0.9)"
+            }
+        },
+        onContextMenu(event, badge) {
+            ContextMenuApi.openContextMenu(event, () => <BadgeContextMenu badge={badge} />);
+        },
+        onClick() {
+            VencordNative.native.openExternal("https://github.com/iyesska/VampCord");
+        }
+    })) ?? []
+};
 
 let intervalId: any;
 
@@ -128,6 +174,10 @@ export default definePlugin({
         return DonorBadges;
     },
 
+    get VampCordBadges() {
+        return VampCordBadges;
+    },
+
     toolboxActions: {
         async "Refetch Badges"() {
             await loadBadges(true);
@@ -138,6 +188,7 @@ export default definePlugin({
     userProfileBadge: ContributorBadge,
 
     async start() {
+        addProfileBadge(VampCordBadge);
         await loadBadges();
 
         clearInterval(intervalId);
@@ -146,6 +197,7 @@ export default definePlugin({
 
     async stop() {
         clearInterval(intervalId);
+        removeProfileBadge(VampCordBadge);
     },
 
     getBadges(profile: { userId: string; guildId: string; }) {

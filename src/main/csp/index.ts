@@ -52,7 +52,7 @@ export const CspPolicies: PolicyMap = {
     "cdn.jsdelivr.net": ImageScriptsAndCssSrc,
 
     // Function Specific
-    "api.github.com": ConnectSrc, // used for updating Vencord itself
+    "api.github.com": ConnectSrc, // used for updating VampCord itself
     "ws.audioscrobbler.com": ConnectSrc, // Last.fm API
     "musicbrainz.org": ConnectSrc,
     "*.listenbrainz.org": ConnectSrc,
