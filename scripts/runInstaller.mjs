@@ -18,89 +18,91 @@
 
 import "./checkNodeVersion.js";
 
-import { execFileSync, execSync } from "child_process";
-import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, rmSync } from "fs";
+// Installs your local build (dist/) into Discord using VampCord's own installer (installer/).
+// The installer is built with Go if it is installed, otherwise it is downloaded from this repository's latest release
+
+import { execFileSync, spawnSync } from "child_process";
+import { chmodSync, copyFileSync, createWriteStream, existsSync, mkdirSync, rmSync } from "fs";
 import { dirname, join } from "path";
 import { Readable } from "stream";
 import { finished } from "stream/promises";
 import { fileURLToPath } from "url";
 
-const BASE_URL = "https://github.com/Vencord/Installer/releases/latest/download/";
-
 const BASE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
-const FILE_DIR = join(BASE_DIR, "dist", "Installer");
-const ETAG_FILE = join(FILE_DIR, "etag.txt");
+const DIST_DIR = join(BASE_DIR, "dist");
+const INSTALLER_SRC = join(BASE_DIR, "installer");
+const FILE_DIR = join(DIST_DIR, "Installer");
+const DIST_FILES = ["patcher.js", "preload.js", "renderer.js", "renderer.css"];
 
-function getFilename() {
-    switch (process.platform) {
-        case "win32":
-            return "VencordInstallerCli.exe";
-        case "darwin":
-            return "VencordInstallerCli-darwin";
-        case "linux":
-            return "VencordInstallerCli-linux";
+const RELEASE_URL = "https://github.com/iyesska/VampCord/releases/download/devbuild/";
+
+function getReleaseFilename() {
+    switch (`${process.platform}-${process.arch}`) {
+        case "win32-x64":
+            return "VampCordInstaller.exe";
+        case "linux-x64":
+            return "VampCordInstaller-linux";
+        case "darwin-x64":
+            return "VampCordInstaller-macos-x64";
+        case "darwin-arm64":
+            return "VampCordInstaller-macos-arm64";
         default:
-            throw new Error("Unsupported platform: " + process.platform);
+            throw new Error(`Unsupported platform: ${process.platform} ${process.arch}`);
     }
 }
 
-async function ensureBinary() {
-    const filename = getFilename();
-    console.log("Downloading " + filename);
+function hasGo() {
+    return spawnSync("go", ["version"], { stdio: "ignore" }).status === 0;
+}
 
-    mkdirSync(FILE_DIR, { recursive: true });
+function buildWithGo(outputFile) {
+    console.log("Building the installer with Go...");
 
-    const outputFile = join(FILE_DIR, filename);
+    const embedDir = join(INSTALLER_SRC, "dist");
+    rmSync(embedDir, { recursive: true, force: true });
+    mkdirSync(embedDir);
+    for (const file of DIST_FILES)
+        copyFileSync(join(DIST_DIR, file), join(embedDir, file));
 
-    const etag = existsSync(outputFile) && existsSync(ETAG_FILE)
-        ? readFileSync(ETAG_FILE, "utf-8")
-        : null;
+    execFileSync("go", ["build", "-o", outputFile, "."], { cwd: INSTALLER_SRC, stdio: "inherit" });
+}
 
-    const res = await fetch(BASE_URL + filename, {
-        headers: {
-            "User-Agent": "Vencord (https://github.com/Vendicated/Vencord)",
-            "If-None-Match": etag
-        }
-    });
+async function download(outputFile) {
+    const url = RELEASE_URL + getReleaseFilename();
+    console.log(`Go is not installed, downloading the installer from ${url}`);
 
-    if (res.status === 304) {
-        console.log("Up to date, not redownloading!");
-        return outputFile;
-    }
+    const res = await fetch(url, { headers: { "User-Agent": "VampCord (https://github.com/iyesska/VampCord)" } });
     if (!res.ok)
-        throw new Error(`Failed to download installer: ${res.status} ${res.statusText}`);
+        throw new Error(`Failed to download the installer: ${res.status} ${res.statusText}. Install Go (https://go.dev/dl/) to build it locally instead`);
 
-    writeFileSync(ETAG_FILE, res.headers.get("etag"));
-
-    const body = Readable.fromWeb(res.body);
-    await finished(body.pipe(createWriteStream(outputFile, {
-        mode: 0o755,
-        autoClose: true
-    })));
-
-    console.log("Finished downloading!");
-
-    return outputFile;
+    await finished(Readable.fromWeb(res.body).pipe(createWriteStream(outputFile)));
+    chmodSync(outputFile, 0o755);
 }
 
+for (const file of DIST_FILES) {
+    if (!existsSync(join(DIST_DIR, file))) {
+        console.error(`dist/${file} is missing. Run "pnpm build" first.`);
+        process.exit(1);
+    }
+}
 
+mkdirSync(FILE_DIR, { recursive: true });
+const installerBin = join(FILE_DIR, process.platform === "win32" ? "vampcord-installer.exe" : "vampcord-installer");
 
-const installerBin = await ensureBinary();
-
-console.log("Now running Installer...");
+if (hasGo())
+    buildWithGo(installerBin);
+else
+    await download(installerBin);
 
 const argStart = process.argv.indexOf("--");
-const args = argStart === -1 ? [] : process.argv.slice(argStart + 1);
+const args = [...(argStart === -1 ? [] : process.argv.slice(argStart + 1)), "-dist", DIST_DIR];
 
-try {
-    execFileSync(installerBin, args, {
-        stdio: "inherit",
-        env: {
-            ...process.env,
-            VENCORD_USER_DATA_DIR: BASE_DIR,
-            VENCORD_DEV_INSTALL: "1"
-        }
-    });
-} catch {
-    console.error("Something went wrong. Please check the logs above.");
+console.log("Now running the installer...");
+const { status } = spawnSync(installerBin, args, { stdio: "inherit" });
+
+if (status !== 0) {
+    console.error("\nSomething went wrong. Please check the logs above.");
+    if (process.platform !== "win32")
+        console.error(`If Discord is installed in a system folder, run:\n  sudo ${installerBin} ${args.map(a => JSON.stringify(a)).join(" ")}`);
+    process.exit(status ?? 1);
 }

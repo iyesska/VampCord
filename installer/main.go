@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -54,167 +53,13 @@ func yellow(s string) string { return paint("1;33", s) }
 func dim(s string) string    { return paint("2", s) }
 func bold(s string) string   { return paint("1", s) }
 
-type branch struct {
-	key, name, folder, exe string
-}
+// retry runs fn a few times, since Windows can keep a file locked for a moment after its process exits.
+// Permission errors won't go away by waiting, so those fail right away
 
-var branches = []branch{
-	{"stable", "Discord Stable", "Discord", "Discord.exe"},
-	{"ptb", "Discord PTB", "DiscordPTB", "DiscordPTB.exe"},
-	{"canary", "Discord Canary", "DiscordCanary", "DiscordCanary.exe"},
-	{"development", "Discord Development", "DiscordDevelopment", "DiscordDevelopment.exe"},
-}
-
-type install struct {
-	branch
-	// Discord's install folder, eg %LOCALAPPDATA%\Discord
-	root string
-	// resources folder of the newest app-x.y.z version
-	resources string
-	// app-x.y.z folder name
-	version string
-}
-
-func (i install) appAsar() string    { return filepath.Join(i.resources, "app.asar") }
-func (i install) backupAsar() string { return filepath.Join(i.resources, "_app.asar") }
-
-func (i install) isPatched() bool {
-	_, err := os.Stat(i.backupAsar())
-	return err == nil
-}
-
-func vampcordDir() string {
-	return filepath.Join(os.Getenv("APPDATA"), "VampCord")
-}
-
-func distDir() string {
-	return filepath.Join(vampcordDir(), "dist")
-}
-
-// Settings, QuickCSS and themes live here (the folder name is kept for compatibility with Vencord)
-func settingsDir() string {
-	return filepath.Join(os.Getenv("APPDATA"), "Vencord")
-}
-
-// parseVersion turns "app-1.0.9187" into [1 0 9187]. ok is false for folders that aren't app versions
-func parseVersion(name string) (parts []int, ok bool) {
-	if !strings.HasPrefix(name, "app-") {
-		return nil, false
-	}
-	for _, s := range strings.Split(strings.TrimPrefix(name, "app-"), ".") {
-		n, err := strconv.Atoi(s)
-		if err != nil {
-			return nil, false
-		}
-		parts = append(parts, n)
-	}
-	return parts, true
-}
-
-func isNewer(a, b []int) bool {
-	for i := 0; i < len(a) && i < len(b); i++ {
-		if a[i] != b[i] {
-			return a[i] > b[i]
-		}
-	}
-	return len(a) > len(b)
-}
-
-// Folders Discord can be installed in: per user (the default) and the machine wide installer's %ProgramData%\<user>
-func searchRoots() []string {
-	var roots []string
-	if dir := os.Getenv("LOCALAPPDATA"); dir != "" {
-		roots = append(roots, dir)
-	}
-	if programData, user := os.Getenv("ProgramData"), os.Getenv("USERNAME"); programData != "" && user != "" {
-		roots = append(roots, filepath.Join(programData, user))
-	}
-	return roots
-}
-
-func findInstall(root string, b branch) (install, bool) {
-	entries, err := os.ReadDir(root)
-	if err != nil {
-		return install{}, false
-	}
-
-	var latest []int
-	latestName := ""
-	for _, e := range entries {
-		if v, ok := parseVersion(e.Name()); ok && e.IsDir() && (latestName == "" || isNewer(v, latest)) {
-			latest, latestName = v, e.Name()
-		}
-	}
-	if latestName == "" {
-		return install{}, false
-	}
-
-	inst := install{
-		branch:    b,
-		root:      root,
-		resources: filepath.Join(root, latestName, "resources"),
-		version:   strings.TrimPrefix(latestName, "app-"),
-	}
-	if _, err := os.Stat(inst.appAsar()); err != nil && !inst.isPatched() {
-		return install{}, false
-	}
-	return inst, true
-}
-
-func findInstalls() []install {
-	var found []install
-	for _, b := range branches {
-		for _, base := range searchRoots() {
-			if inst, ok := findInstall(filepath.Join(base, b.folder), b); ok {
-				found = append(found, inst)
-				break
-			}
-		}
-	}
-	return found
-}
-
-func isRunning(inst install) bool {
-	if runtime.GOOS != "windows" {
-		return false
-	}
-	out, err := exec.Command("tasklist", "/FI", "IMAGENAME eq "+inst.exe, "/NH").Output()
-	return err == nil && bytes.Contains(bytes.ToLower(out), []byte(strings.ToLower(inst.exe)))
-}
-
-// closeDiscord closes Discord since it keeps app.asar open while running. It reports whether Discord was running
-func closeDiscord(inst install) bool {
-	if !isRunning(inst) {
-		return false
-	}
-
-	fmt.Printf("  Closing %s...\n", inst.name)
-	_ = exec.Command("taskkill", "/F", "/T", "/IM", inst.exe).Run()
-
-	for attempt := 0; attempt < 20 && isRunning(inst); attempt++ {
-		time.Sleep(250 * time.Millisecond)
-	}
-	// Give Windows a moment to release file handles
-	time.Sleep(500 * time.Millisecond)
-	return true
-}
-
-func startDiscord(inst install) {
-	if runtime.GOOS != "windows" {
-		return
-	}
-	updater := filepath.Join(inst.root, "Update.exe")
-	if _, err := os.Stat(updater); err == nil {
-		fmt.Printf("  Starting %s...\n", inst.name)
-		_ = exec.Command(updater, "--processStart", inst.exe).Start()
-	}
-}
-
-// retry runs fn a few times, since Windows can keep a file locked for a moment after its process exits
 func retry(fn func() error) (err error) {
 	for attempt := 0; attempt < 10; attempt++ {
-		if err = fn(); err == nil {
-			return nil
+		if err = fn(); err == nil || errors.Is(err, fs.ErrPermission) && runtime.GOOS != "windows" {
+			return err
 		}
 		time.Sleep(500 * time.Millisecond)
 	}
@@ -259,15 +104,20 @@ func installTo(inst install) error {
 	fmt.Printf("%s %s\n", bold("Installing VampCord into"), bold(inst.name))
 	wasRunning := closeDiscord(inst)
 
-	fmt.Println("  Copying VampCord files...")
-	if err := writeDist(); err != nil {
-		return fmt.Errorf("could not write the VampCord files: %w", err)
+	if distOverride == "" {
+		fmt.Println("  Copying VampCord files...")
+		if err := writeDist(); err != nil {
+			return fmt.Errorf("could not write the VampCord files: %w", err)
+		}
+		fixOwnership(vampcordDir())
+	} else {
+		fmt.Println("  Using the VampCord build in " + distOverride)
 	}
 
 	if !inst.isPatched() {
 		fmt.Println("  Backing up Discord's app.asar...")
 		if err := retry(func() error { return os.Rename(inst.appAsar(), inst.backupAsar()) }); err != nil {
-			return fmt.Errorf("could not back up Discord's app.asar. Close Discord completely (also from the system tray) and try again: %w", err)
+			return fmt.Errorf("could not back up Discord's app.asar. %s: %w", permissionHint(), err)
 		}
 	}
 
@@ -277,7 +127,7 @@ func installTo(inst install) error {
 	}
 	fmt.Println("  Patching Discord...")
 	if err := retry(func() error { return os.WriteFile(inst.appAsar(), stub, 0o644) }); err != nil {
-		return fmt.Errorf("could not write app.asar: %w", err)
+		return fmt.Errorf("could not write app.asar. %s: %w", permissionHint(), err)
 	}
 
 	if err := verifyInstall(inst, stub); err != nil {
@@ -308,7 +158,7 @@ func uninstallFrom(inst install) error {
 		}
 		return err
 	}); err != nil {
-		return fmt.Errorf("could not remove app.asar: %w", err)
+		return fmt.Errorf("could not remove app.asar. %s: %w", permissionHint(), err)
 	}
 	if err := retry(func() error { return os.Rename(inst.backupAsar(), inst.appAsar()) }); err != nil {
 		return fmt.Errorf("could not restore Discord's app.asar: %w", err)
@@ -323,6 +173,9 @@ func uninstallFrom(inst install) error {
 
 // cleanupDist removes the VampCord files once no Discord install uses them anymore. Settings and themes are kept
 func cleanupDist() {
+	if distOverride != "" {
+		return
+	}
 	for _, inst := range findInstalls() {
 		if inst.isPatched() {
 			return
@@ -379,15 +232,6 @@ func prompt(reader *bufio.Reader, text string) string {
 	fmt.Print(text)
 	line, _ := reader.ReadString('\n')
 	return strings.TrimSpace(line)
-}
-
-func openFolder(path string) {
-	_ = os.MkdirAll(path, 0o755)
-	if runtime.GOOS == "windows" {
-		_ = exec.Command("explorer", path).Start()
-	} else {
-		fmt.Println("  " + path)
-	}
 }
 
 func printBanner() {
@@ -480,17 +324,26 @@ func main() {
 	doUninstall := flag.Bool("uninstall", false, "uninstall VampCord without the interactive menu")
 	branchKey := flag.String("branch", "all", "Discord branch to use: stable, ptb, canary, development or all")
 	showVersion := flag.Bool("version", false, "print the installer version")
+	flag.StringVar(&distOverride, "dist", "", "use the VampCord build in this folder instead of the bundled one (for development)")
 	flag.Parse()
+
+	if distOverride != "" {
+		abs, err := filepath.Abs(distOverride)
+		if err == nil {
+			_, err = os.Stat(filepath.Join(abs, "patcher.js"))
+		}
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error: -dist must be a folder containing a VampCord build (patcher.js). Run pnpm build first")
+			os.Exit(1)
+		}
+		distOverride = abs
+	}
 
 	useColor = setupConsole("VampCord Installer") && os.Getenv("NO_COLOR") == ""
 
 	if *showVersion {
 		fmt.Printf("VampCord Installer %s (%s)\n", version, commit)
 		return
-	}
-
-	if runtime.GOOS != "windows" {
-		fmt.Fprintln(os.Stderr, yellow("Warning: this installer is meant for Windows"))
 	}
 
 	if *doInstall && *doUninstall {
