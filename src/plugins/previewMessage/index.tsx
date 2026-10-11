@@ -24,7 +24,17 @@ import definePlugin, { IconComponent, StartAt } from "@utils/types";
 import { CloudUpload, MessageAttachment } from "@vencord/discord-types";
 import { DraftStore, DraftType, UploadAttachmentStore, UserStore, useStateFromStores } from "@webpack/common";
 
+// Object urls of preview attachments, keyed by preview message id. They are revoked once the preview is dismissed
+// or the plugin is stopped
 const objectURLMap = new Map<string, string[]>();
+
+function revokeObjectURLs(messageId: string) {
+    const objectURLs = objectURLMap.get(messageId);
+    if (!objectURLs) return;
+
+    objectURLs.forEach(url => URL.revokeObjectURL(url));
+    objectURLMap.delete(messageId);
+}
 
 const getDraft = (channelId: string) => DraftStore.getDraft(channelId, DraftType.ChannelMessage);
 
@@ -47,7 +57,6 @@ const getAttachments = async (channelId: string) =>
             .map(async (upload: CloudUpload) => {
                 const { isImage, filename, spoiler, item: { file } } = upload;
 
-                // FIXME: revoke object url to fix memory leak
                 const url = URL.createObjectURL(file);
                 const attachment: MessageAttachment = {
                     id: generateId(),
@@ -140,11 +149,12 @@ export default definePlugin({
 
     flux: {
         MESSAGE_DELETE({ id: messageId }) {
-            const objectURLs = objectURLMap.get(messageId);
-            if (objectURLs) {
-                objectURLs.forEach(url => URL.revokeObjectURL(url));
-                objectURLMap.delete(messageId);
-            }
+            revokeObjectURLs(messageId);
         }
+    },
+
+    stop() {
+        for (const messageId of [...objectURLMap.keys()])
+            revokeObjectURLs(messageId);
     }
 });
