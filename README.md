@@ -28,13 +28,26 @@ The cutest Discord client mod
 
 ## Installing / Uninstalling
 
-See the [upstream Vencord instructions](https://docs.vencord.dev/installing/) and build from this repository:
+### Windows
+
+1. Download `VampCordInstaller.exe` from the [latest release](https://github.com/iyesska/VampCord/releases/latest)
+2. Run it, pick your Discord install and choose **Install / Repair** (or **Uninstall**)
+3. Discord restarts with a new **VampCord** section in User Settings
+
+The installer also works from the command line: `VampCordInstaller.exe -install -branch stable` or `-uninstall`
+(branches: `stable`, `ptb`, `canary`, `development`, `all`).
+
+Installed copies update themselves from the latest release, and VampCord re-applies itself when Discord updates.
+
+### Building it yourself
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm build
-pnpm inject
+pnpm build --standalone
+pnpm buildInstaller   # needs Go, creates dist/VampCordInstaller.exe
 ```
+
+On other platforms you can use `pnpm build` followed by `pnpm inject`.
 
 ## Disclaimer
 

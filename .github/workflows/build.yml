@@ -8,10 +8,15 @@ on:
             - src/**
             - browser/**
             - scripts/build/**
+            - installer/**
+            - scripts/buildInstaller.mjs
             - package.json
             - pnpm-lock.yaml
 env:
     FORCE_COLOR: true
+
+permissions:
+    contents: write
 
 jobs:
     Build:
@@ -37,6 +42,18 @@ jobs:
             - name: Build
               run: pnpm build --standalone
 
+            - uses: actions/setup-go@v6
+              with:
+                  go-version-file: installer/go.mod
+                  cache: false
+
+            - name: Test installer
+              run: go test ./...
+              working-directory: installer
+
+            - name: Build Windows installer
+              run: pnpm buildInstaller
+
             - name: Generate plugin list
               run: pnpm generatePluginJson dist/plugins.json dist/plugin-readmes.json
 
@@ -50,31 +67,11 @@ jobs:
                   echo "release_tag=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
             - name: Upload DevBuild as release
-              if: github.repository == 'Vendicated/Vencord'
+              if: github.repository == 'iyesska/VampCord'
               run: |
+                  gh release view devbuild > /dev/null 2>&1 || gh release create devbuild --title "DevBuild $RELEASE_TAG" --notes "Download VampCordInstaller.exe and run it to install VampCord into Discord. Installed copies update themselves from this release." --latest
                   gh release upload devbuild --clobber dist/*
-                  gh release edit devbuild --title "DevBuild $RELEASE_TAG"
+                  gh release edit devbuild --title "DevBuild $RELEASE_TAG" --latest
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   RELEASE_TAG: ${{ env.release_tag }}
-
-            - name: Upload DevBuild to builds repo
-              if: github.repository == 'Vendicated/Vencord'
-              run: |
-                  git config --global user.name "$USERNAME"
-                  git config --global user.email actions@github.com
-
-                  git clone https://$USERNAME:$API_TOKEN@github.com/$GH_REPO.git upload
-                  cd upload
-
-                  GLOBIGNORE=.git:.gitignore:README.md:LICENSE
-                  rm -rf *
-                  cp -r ../dist/* .
-
-                  git add -A
-                  git commit -m "Builds for https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
-                  git push --force https://$USERNAME:$API_TOKEN@github.com/$GH_REPO.git
-              env:
-                  API_TOKEN: ${{ secrets.BUILDS_TOKEN }}
-                  GH_REPO: Vencord/builds
-                  USERNAME: GitHub-Actions
