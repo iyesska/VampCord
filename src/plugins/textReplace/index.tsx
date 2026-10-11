@@ -101,17 +101,18 @@ const settings = definePluginSettings({
 });
 
 function stringToRegex(str: string) {
-    const match = str.match(/^(\/)?(.+?)(?:\/([gimsuyv]*))?$/); // Regex to match regex
+    // Only treat the input as a regex literal if it is wrapped in slashes, eg /pattern/flags.
+    // Otherwise the whole string is the pattern, so things like "https://x.com/i" or "1/2/" keep their slashes
+    const match = str.match(/^\/(.+)\/([gimsuyv]*)$/);
     return match
         ? new RegExp(
-            match[2], // Pattern
-            match[3]
-                ?.split("") // Remove duplicate flags
+            match[1], // Pattern
+            match[2]
+                .split("") // Remove duplicate flags
                 .filter((char, pos, flagArr) => flagArr.indexOf(char) === pos)
                 .join("")
-            ?? "g"
         )
-        : new RegExp(str); // Not a regex, return string
+        : new RegExp(str, "g");
 }
 
 function renderFindError(find: string) {
