@@ -17,12 +17,36 @@
 */
 
 import { app } from "electron";
+import { cpSync, existsSync } from "fs";
 import { join } from "path";
+
+/**
+ * VampCord keeps its own data folder so it doesn't share settings with a Vencord install.
+ * The first time it runs, settings and themes are copied over from the Vencord folder if there is one
+ */
+function getDataDir(parent: string, name: string, legacyName: string) {
+    const dir = join(parent, name);
+
+    try {
+        const legacyDir = join(parent, legacyName);
+        if (!existsSync(join(dir, "settings")) && existsSync(join(legacyDir, "settings"))) {
+            for (const sub of ["settings", "themes"]) {
+                if (existsSync(join(legacyDir, sub)))
+                    cpSync(join(legacyDir, sub), join(dir, sub), { recursive: true });
+            }
+            console.info(`[VampCord] Copied settings and themes from ${legacyDir}`);
+        }
+    } catch (err) {
+        console.error("[VampCord] Failed to copy settings from Vencord", err);
+    }
+
+    return dir;
+}
 
 export const DATA_DIR = process.env.VENCORD_USER_DATA_DIR ?? (
     process.env.DISCORD_USER_DATA_DIR
-        ? join(process.env.DISCORD_USER_DATA_DIR, "..", "VencordData")
-        : join(app.getPath("userData"), "..", "Vencord")
+        ? getDataDir(join(process.env.DISCORD_USER_DATA_DIR, ".."), "VampCordData", "VencordData")
+        : getDataDir(join(app.getPath("userData"), ".."), "VampCord", "Vencord")
 );
 export const SETTINGS_DIR = join(DATA_DIR, "settings");
 export const THEMES_DIR = join(DATA_DIR, "themes");
