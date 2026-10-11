@@ -80,7 +80,8 @@ export default definePlugin({
         for (const [name, provider] of Object.entries(res.providers)) {
             const urlPattern = new RegExp(provider.urlPattern, "i");
 
-            const rules = provider.rules?.map(rule => new RegExp(rule, "i"));
+            // Rules must match the entire param name, otherwise eg the rule "th" would also strip "width" or "month"
+            const rules = provider.rules?.map(rule => new RegExp(`^(?:${rule})$`, "i"));
             const rawRules = provider.rawRules?.map(rule => new RegExp(rule, "i"));
             const exceptions = provider.exceptions?.map(ex => new RegExp(ex, "i"));
 
@@ -106,6 +107,8 @@ export default definePlugin({
         // Cheap way to check if there are any search params
         if (url.searchParams.entries().next().done) return match;
 
+        const originalHref = url.href;
+
         // Check rules for each provider that matches
         this.rules.forEach(({ urlPattern, exceptions, rawRules, rules }) => {
             if (!urlPattern.test(url.href) || exceptions?.some(ex => ex.test(url.href))) return;
@@ -129,10 +132,17 @@ export default definePlugin({
             rawRules?.forEach(rawRule => {
                 cleanedUrl = cleanedUrl.replace(rawRule, "");
             });
-            url = new URL(cleanedUrl);
+
+            if (cleanedUrl === url.href) return;
+            try {
+                url = new URL(cleanedUrl);
+            } catch {
+                // A raw rule produced an invalid url, ignore it
+            }
         });
 
-        return url.toString();
+        // Avoid needlessly normalising urls we didn't change
+        return url.href === originalHref ? match : url.toString();
     },
 
     cleanMessage(msg: MessageObject) {
