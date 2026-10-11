@@ -8,7 +8,7 @@
 // Run `pnpm build --standalone` first. Requires Go (https://go.dev/dl/)
 
 import { execFileSync } from "child_process";
-import { copyFileSync, existsSync, mkdirSync, rmSync } from "fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from "fs";
 import { join } from "path";
 
 const FILES = ["patcher.js", "preload.js", "renderer.js", "renderer.css"];
@@ -28,7 +28,21 @@ mkdirSync(embedDir);
 for (const file of FILES)
     copyFileSync(join(distDir, file), join(embedDir, file));
 
-execFileSync("go", ["build", "-trimpath", "-ldflags=-s -w", "-o", join(distDir, "VampCordInstaller.exe"), "."], {
+const { version } = JSON.parse(readFileSync(join(import.meta.dirname, "..", "package.json"), "utf-8"));
+const commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf-8" }).trim();
+
+// Icon, version info and manifest for the exe
+execFileSync("go", [
+    "run", "github.com/tc-hib/go-winres@v0.3.3", "make",
+    "--in", "winres/winres.json", "--out", "rsrc", "--arch", "amd64",
+    "--product-version", version, "--file-version", version
+], { cwd: installerDir, stdio: "inherit" });
+
+execFileSync("go", [
+    "build", "-trimpath",
+    `-ldflags=-s -w -X main.version=${version} -X main.commit=${commit}`,
+    "-o", join(distDir, "VampCordInstaller.exe"), "."
+], {
     cwd: installerDir,
     stdio: "inherit",
     env: { ...process.env, GOOS: "windows", GOARCH: "amd64", CGO_ENABLED: "0" }
