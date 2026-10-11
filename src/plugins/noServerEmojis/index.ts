@@ -1,5 +1,5 @@
 /*
- * Vencord, a Discord client mod
+ * VampCord, a Discord client mod
  * Copyright (c) 2023 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -7,7 +7,7 @@
 import { definePluginSettings } from "@api/Settings";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import type { Channel, Emoji } from "@vencord/discord-types";
+import type { Channel, Emoji } from "@vampcord/discord-types";
 
 const settings = definePluginSettings({
     shownEmojis: {

@@ -1,5 +1,5 @@
 /*
- * Vencord, a Discord client mod
+ * VampCord, a Discord client mod
  * Copyright (c) 2025 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -10,7 +10,7 @@ import { Settings } from "@api/Settings";
 import { CogWheel, InfoIcon } from "@components/Icons";
 import { AddonCard } from "@components/settings/AddonCard";
 import { Plugin } from "@utils/types";
-import { ToastPosition } from "@vencord/discord-types/enums";
+import { ToastPosition } from "@vampcord/discord-types/enums";
 import { React, showToast } from "@webpack/common";
 
 import { cl, logger } from ".";

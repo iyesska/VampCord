@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@ import { ApplicationCommandInputType, findOption, OptionalMessageOption, sendBot
 import { Devs } from "@utils/constants";
 import { sendMessage } from "@utils/discord";
 import definePlugin from "@utils/types";
-import { Command, SpotifyTrack } from "@vencord/discord-types";
+import { Command, SpotifyTrack } from "@vampcord/discord-types";
 import { FluxDispatcher, MessageActions, PendingReplyStore, SpotifyStore } from "@webpack/common";
 
 function makeCommand(name: string, formatUrl: (track: SpotifyTrack) => string): Command {

@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ import { ImageInvisible, ImageVisible } from "@components/Icons";
 import { Devs } from "@utils/constants";
 import { classes } from "@utils/misc";
 import definePlugin from "@utils/types";
-import { Message } from "@vencord/discord-types";
+import { Message } from "@vampcord/discord-types";
 import { ChannelStore } from "@webpack/common";
 
 const KEY = "HideAttachments_HiddenIds";

@@ -1,5 +1,5 @@
 /*
- * Vencord, a Discord client mod
+ * VampCord, a Discord client mod
  * Copyright (c) 2025 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -198,7 +198,7 @@ export function buildThemeMenu() {
 
 export function buildThemeMenuEntries() {
     const { useQuickCss, enabledThemes } = useSettings(["useQuickCss", "enabledThemes"]);
-    const [themes] = useAwaiter(VencordNative.themes.getThemesList);
+    const [themes] = useAwaiter(VampCordNative.themes.getThemesList);
 
     return (
         <>
@@ -213,7 +213,7 @@ export function buildThemeMenuEntries() {
             <Menu.MenuItem
                 id="edit-quickcss"
                 label="Edit QuickCSS"
-                action={() => VencordNative.quickCss.openEditor()}
+                action={() => VampCordNative.quickCss.openEditor()}
             />
             <Menu.MenuItem
                 id="manage-themes"

@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2023 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@ import { generateId, sendBotMessage } from "@api/Commands";
 import { EyeIcon } from "@components/Icons";
 import { Devs } from "@utils/constants";
 import definePlugin, { IconComponent, StartAt } from "@utils/types";
-import { CloudUpload, MessageAttachment } from "@vencord/discord-types";
+import { CloudUpload, MessageAttachment } from "@vampcord/discord-types";
 import { DraftStore, DraftType, UploadAttachmentStore, UserStore, useStateFromStores } from "@webpack/common";
 
 // Object urls of preview attachments, keyed by preview message id. They are revoked once the preview is dismissed

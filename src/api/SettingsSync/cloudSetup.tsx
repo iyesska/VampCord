@@ -1,5 +1,5 @@
 /*
- * Vencord, a Discord client mod
+ * VampCord, a Discord client mod
  * Copyright (c) 2025 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -20,13 +20,12 @@ export async function checkCloudUrlCsp() {
     if (IS_WEB) return true;
 
     const { host } = getCloudUrl();
-    if (host === "api.vencord.dev") return true;
 
-    if (await VencordNative.csp.isDomainAllowed(Settings.cloud.url, ["connect-src"])) {
+    if (await VampCordNative.csp.isDomainAllowed(Settings.cloud.url, ["connect-src"])) {
         return true;
     }
 
-    const res = await VencordNative.csp.requestAddOverride(Settings.cloud.url, ["connect-src"], "Cloud Sync");
+    const res = await VampCordNative.csp.requestAddOverride(Settings.cloud.url, ["connect-src"], "Cloud Sync");
     if (res === "ok") {
         openModal(props => (
             <ConfirmModal
@@ -50,13 +49,13 @@ const getUserId = () => {
 };
 
 export async function getAuthorization() {
-    const secrets = await DataStore.get<Record<string, string>>("Vencord_cloudSecret") ?? {};
+    const secrets = await DataStore.get<Record<string, string>>("VampCord_cloudSecret") ?? {};
 
     const origin = getCloudUrlOrigin();
 
     // we need to migrate from the old format here
     if (secrets[origin]) {
-        await DataStore.update<Record<string, string>>("Vencord_cloudSecret", secrets => {
+        await DataStore.update<Record<string, string>>("VampCord_cloudSecret", secrets => {
             secrets ??= {};
             // use the current user ID
             secrets[`${origin}:${getUserId()}`] = secrets[origin];
@@ -72,7 +71,7 @@ export async function getAuthorization() {
 }
 
 async function setAuthorization(secret: string) {
-    await DataStore.update<Record<string, string>>("Vencord_cloudSecret", secrets => {
+    await DataStore.update<Record<string, string>>("VampCord_cloudSecret", secrets => {
         secrets ??= {};
         secrets[`${getCloudUrlOrigin()}:${getUserId()}`] = secret;
         return secrets;
@@ -80,7 +79,7 @@ async function setAuthorization(secret: string) {
 }
 
 export async function deauthorizeCloud() {
-    await DataStore.update<Record<string, string>>("Vencord_cloudSecret", secrets => {
+    await DataStore.update<Record<string, string>>("VampCord_cloudSecret", secrets => {
         secrets ??= {};
         delete secrets[`${getCloudUrlOrigin()}:${getUserId()}`];
         return secrets;
@@ -88,6 +87,14 @@ export async function deauthorizeCloud() {
 }
 
 export async function authorizeCloud() {
+    if (!Settings.cloud.url) {
+        showNotification({
+            title: "Cloud Integrations",
+            body: "Enter the URL of your cloud backend first."
+        });
+        return;
+    }
+
     if (await getAuthorization() !== undefined) {
         Settings.cloud.authenticated = true;
         return;

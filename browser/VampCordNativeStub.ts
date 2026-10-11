@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 /// <reference path="../src/globals.d.ts" />
 
 // Be very careful with imports in this file to avoid circular dependency issues.
-// Only import pure modules that don't import other parts of Vencord.
+// Only import pure modules that don't import other parts of VampCord.
 import monacoHtmlLocal from "file://monacoWin.html?minify";
 import * as DataStore from "@api/DataStore";
 import type { Settings } from "@api/Settings";
@@ -35,12 +35,21 @@ const cssListeners = new Set<(css: string) => void>();
 const NOOP = () => { };
 const NOOP_ASYNC = async () => { };
 
-const setCssDebounced = debounce((css: string) => VencordNative.quickCss.set(css));
+const setCssDebounced = debounce((css: string) => VampCordNative.quickCss.set(css));
 
-const themeStore = DataStore.createStore("VencordThemes", "VencordThemeData");
+const themeStore = DataStore.createMigratedStore("VampCordThemes", "VampCordThemeData", "VencordThemes", "VencordThemeData");
+
+// Settings used to be saved under the name of the project VampCord was forked from
+const SETTINGS_KEY = "VampCordSettings";
+const LEGACY_SETTINGS_KEY = "VencordSettings";
+try {
+    const legacySettings = localStorage.getItem(LEGACY_SETTINGS_KEY);
+    if (legacySettings && !localStorage.getItem(SETTINGS_KEY))
+        localStorage.setItem(SETTINGS_KEY, legacySettings);
+} catch { }
 
 // probably should make this less cursed at some point
-window.VencordNative = {
+window.VampCordNative = {
     themes: {
         uploadTheme: (fileName: string, fileData: string) => DataStore.set(fileName, fileData, themeStore),
         deleteTheme: (fileName: string) => DataStore.del(fileName, themeStore),
@@ -71,16 +80,16 @@ window.VencordNative = {
     },
 
     updater: {
-        getRepo: async () => ({ ok: true, value: "https://github.com/Vendicated/Vencord" }),
+        getRepo: async () => ({ ok: true, value: "https://github.com/iyesska/VampCord" }),
         getUpdates: async () => ({ ok: true, value: [] }),
         update: async () => ({ ok: true, value: false }),
         rebuild: async () => ({ ok: true, value: true }),
     },
 
     quickCss: {
-        get: () => DataStore.get("VencordQuickCss").then(s => s ?? ""),
+        get: () => DataStore.get("VampCordQuickCss").then(s => s ?? ""),
         set: async (css: string) => {
-            await DataStore.set("VencordQuickCss", css);
+            await DataStore.set("VampCordQuickCss", css);
             cssListeners.forEach(l => l(css));
         },
         addChangeListener(cb) {
@@ -98,7 +107,7 @@ window.VencordNative = {
             }
 
             const features = `popup,width=${Math.min(window.innerWidth, 1000)},height=${Math.min(window.innerHeight, 1000)}`;
-            const win = open("about:blank", "VencordQuickCss", features);
+            const win = open("about:blank", "VampCordQuickCss", features);
             if (!win) {
                 alert("Failed to open QuickCSS popup. Make sure to allow popups!");
                 return;
@@ -106,7 +115,7 @@ window.VencordNative = {
 
             win.baseUrl = EXTENSION_BASE_URL;
             win.setCss = setCssDebounced;
-            win.getCurrentCss = () => VencordNative.quickCss.get();
+            win.getCurrentCss = () => VampCordNative.quickCss.get();
             win.getTheme = this.getEditorTheme;
 
             win.document.write(monacoHtmlLocal);
@@ -123,13 +132,13 @@ window.VencordNative = {
     settings: {
         get: () => {
             try {
-                return JSON.parse(localStorage.getItem("VencordSettings") || "{}");
+                return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
             } catch (e) {
                 console.error("Failed to parse settings from localStorage: ", e);
                 return {};
             }
         },
-        set: async (s: Settings) => localStorage.setItem("VencordSettings", JSON.stringify(s)),
+        set: async (s: Settings) => localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)),
         openFolder: async () => Promise.reject("settings:openFolder is not supported on web"),
     },
 

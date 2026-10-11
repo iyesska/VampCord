@@ -1,5 +1,5 @@
 /*
- * Vencord, a Discord client mod
+ * VampCord, a Discord client mod
  * Copyright (c) 2024 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -24,7 +24,7 @@ class NotAllowedError extends Error {
     name = "NotAllowedError";
 }
 
-const logger = new Logger("VencordScreenShare");
+const logger = new Logger("VampCordScreenShare");
 
 const getDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
 

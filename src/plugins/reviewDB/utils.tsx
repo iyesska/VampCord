@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,8 +17,8 @@
 */
 
 import { classNameFactory } from "@utils/css";
-import { ToastType } from "@vencord/discord-types";
-import { ToastPosition } from "@vencord/discord-types/enums";
+import { ToastType } from "@vampcord/discord-types";
+import { ToastPosition } from "@vampcord/discord-types/enums";
 import { showToast as originalShowToast, UserStore } from "@webpack/common";
 
 import { Auth } from "./auth";

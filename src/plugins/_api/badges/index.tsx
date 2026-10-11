@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,24 +20,20 @@ import "./fixDiscordBadgePadding.css";
 
 import { _getBadges, addProfileBadge, BadgePosition, BadgeUserArgs, ProfileBadge, removeProfileBadge } from "@api/Badges";
 import ErrorBoundary from "@components/ErrorBoundary";
-import { Flex } from "@components/Flex";
-import { Heart } from "@components/Heart";
 import { CopyIcon, LinkIcon } from "@components/Icons";
-import DonateButton from "@components/settings/DonateButton";
 import { openContributorModal } from "@components/settings/tabs";
 import { Devs } from "@utils/constants";
 import { copyWithToast } from "@utils/discord";
 import { Logger } from "@utils/Logger";
-import { Margins } from "@utils/margins";
 import { shouldShowContributorBadge } from "@utils/misc";
 import definePlugin from "@utils/types";
-import { ContextMenuApi, Forms, Menu, Modal, openModal, showToast, UserStore } from "@webpack/common";
+import { ContextMenuApi, Menu, showToast, UserStore } from "@webpack/common";
 
-const CONTRIBUTOR_BADGE = "https://cdn.discordapp.com/emojis/1092089799109775453.png?size=64";
+const CONTRIBUTOR_BADGE = "https://raw.githubusercontent.com/iyesska/VampCord/main/assets/badge.png";
 
 const ContributorBadge: ProfileBadge = {
-    id: "vencord_contributor_badge",
-    description: "Vencord Contributor",
+    id: "vampcord_contributor_badge",
+    description: "VampCord Plugin Developer",
     iconSrc: CONTRIBUTOR_BADGE,
     position: BadgePosition.START,
     shouldShow: ({ userId }) => shouldShowContributorBadge(userId),
@@ -46,7 +42,6 @@ const ContributorBadge: ProfileBadge = {
 
 type BadgeMap = Record<string, Array<{ tooltip: string; badge?: string; }>>;
 
-let DonorBadges = {} as BadgeMap;
 let VampCordBadges = {} as BadgeMap;
 
 // VampCord's own badges, edit badges.json in the repository to give someone a badge
@@ -66,17 +61,11 @@ async function loadBadges(noCache = false) {
     if (noCache)
         init.cache = "no-cache";
 
-    // Load both lists independently, so one being unreachable doesn't break the other
-    const [donor, vampcord] = await Promise.allSettled([
-        fetchBadges("https://badges.vencord.dev/badges.json", init),
-        fetchBadges(VAMPCORD_BADGES_URL, init)
-    ]);
-
-    if (donor.status === "fulfilled") DonorBadges = donor.value;
-    else BadgeLogger.warn("Failed to load donor badges", donor.reason);
-
-    if (vampcord.status === "fulfilled") VampCordBadges = vampcord.value;
-    else BadgeLogger.warn("Failed to load VampCord badges", vampcord.reason);
+    try {
+        VampCordBadges = await fetchBadges(VAMPCORD_BADGES_URL, init);
+    } catch (err) {
+        BadgeLogger.warn("Failed to load VampCord badges", err);
+    }
 }
 
 const VampCordBadge: ProfileBadge = {
@@ -96,7 +85,7 @@ const VampCordBadge: ProfileBadge = {
             ContextMenuApi.openContextMenu(event, () => <BadgeContextMenu badge={badge} />);
         },
         onClick() {
-            VencordNative.native.openExternal("https://github.com/iyesska/VampCord");
+            VampCordNative.native.openExternal("https://github.com/iyesska/VampCord");
         }
     })) ?? []
 };
@@ -170,10 +159,6 @@ export default definePlugin({
     ],
 
     // for access from the console or other plugins
-    get DonorBadges() {
-        return DonorBadges;
-    },
-
     get VampCordBadges() {
         return VampCordBadges;
     },
@@ -228,80 +213,5 @@ export default definePlugin({
         if (onContextMenu) handlers.onContextMenu = e => onContextMenu(e, badge);
 
         return handlers;
-    },
-
-    getDonorBadges(userId: string) {
-        return DonorBadges[userId]?.map((badge, idx) => ({
-            id: `vencord_donor_badge_${idx}`,
-            iconSrc: badge.badge,
-            description: badge.tooltip,
-            position: BadgePosition.START,
-            props: {
-                style: {
-                    borderRadius: "50%",
-                    transform: "scale(0.9)" // The image is a bit too big compared to default badges
-                }
-            },
-            onContextMenu(event, badge) {
-                ContextMenuApi.openContextMenu(event, () => <BadgeContextMenu badge={badge} />);
-            },
-            onClick() {
-                openModal(props => (
-                    <ErrorBoundary noop onError={() => {
-                        props.onClose();
-                        VencordNative.native.openExternal("https://github.com/sponsors/Vendicated");
-                    }}>
-                        <Modal
-                            {...props}
-                            title={
-                                <Forms.FormTitle
-                                    tag="h2"
-                                    style={{
-                                        width: "100%",
-                                        textAlign: "center",
-                                        margin: 0
-                                    }}
-                                >
-                                    <Flex justifyContent="center" alignItems="center" gap="0.5em">
-                                        <Heart />
-                                        Vencord Donor
-                                    </Flex>
-                                </Forms.FormTitle>
-                            }
-                        >
-                            <div>
-                                <Flex>
-                                    <img
-                                        role="presentation"
-                                        src="https://cdn.discordapp.com/emojis/1026533070955872337.png"
-                                        alt=""
-                                        style={{ margin: "auto" }}
-                                    />
-                                    <img
-                                        role="presentation"
-                                        src="https://cdn.discordapp.com/emojis/1026533090627174460.png"
-                                        alt=""
-                                        style={{ margin: "auto" }}
-                                    />
-                                </Flex>
-                                <div style={{ padding: "1em" }}>
-                                    <Forms.FormText>
-                                        This Badge is a special perk for Vencord Donors
-                                    </Forms.FormText>
-                                    <Forms.FormText className={Margins.top20}>
-                                        Please consider supporting the development of Vencord by becoming a donor. It would mean a lot!!
-                                    </Forms.FormText>
-                                </div>
-                            </div>
-                            <div>
-                                <Flex justifyContent="center" style={{ width: "100%" }}>
-                                    <DonateButton />
-                                </Flex>
-                            </div>
-                        </Modal>
-                    </ErrorBoundary>
-                ));
-            },
-        } satisfies ProfileBadge));
     }
 });

@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2023 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 
 import "./styles.css";
 
-import { definePluginSettings } from "@api/Settings";
+import { definePluginSettings, migratePluginSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
@@ -49,7 +49,7 @@ function Icon({ isShown }: { isShown: boolean; }) {
     );
 }
 
-function VencordPopoutButton() {
+function VampCordPopoutButton() {
     const buttonRef = useRef(null);
     const [show, setShow] = useState(false);
 
@@ -77,8 +77,10 @@ function VencordPopoutButton() {
     );
 }
 
+migratePluginSettings("VampCordToolbox", "VencordToolbox");
+
 export default definePlugin({
-    name: "VencordToolbox",
+    name: "VampCordToolbox",
     description: "Adds a button to the titlebar that houses VampCord quick actions",
     tags: ["Utility", "Developers"],
     authors: [Devs.Ven, Devs.AutumnVN],
@@ -100,7 +102,7 @@ export default definePlugin({
             <>
                 {children}
                 <ErrorBoundary key="vc-toolbox" noop>
-                    <VencordPopoutButton />
+                    <VampCordPopoutButton />
                 </ErrorBoundary>
             </>
         );

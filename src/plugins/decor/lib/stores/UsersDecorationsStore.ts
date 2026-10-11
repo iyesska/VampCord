@@ -1,5 +1,5 @@
 /*
- * Vencord, a Discord client mod
+ * VampCord, a Discord client mod
  * Copyright (c) 2023 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -9,7 +9,7 @@ import { getUsersDecorations } from "@plugins/decor/lib/api";
 import { DECORATION_FETCH_COOLDOWN, SKU_ID } from "@plugins/decor/lib/constants";
 import { debounce } from "@shared/debounce";
 import { proxyLazy } from "@utils/lazy";
-import { User } from "@vencord/discord-types";
+import { User } from "@vampcord/discord-types";
 import { useEffect, useState, zustandCreate } from "@webpack/common";
 
 interface UserDecorationData {

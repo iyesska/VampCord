@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2023 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 
 import { Devs } from "@utils/constants";
 import definePlugin from "@utils/types";
-import { Emoji } from "@vencord/discord-types";
+import { Emoji } from "@vampcord/discord-types";
 import { EmojiStore } from "@webpack/common";
 
 interface EmojiAutocompleteState {

@@ -47,9 +47,58 @@ export type UseStore = <T>(
 
 let defaultGetStoreFunc: UseStore | undefined;
 
+const MIGRATED_KEY = "VampCord_migratedLegacyData";
+
+async function databaseExists(name: string) {
+    // indexedDB.databases() is supported by every browser Discord runs in, but be safe
+    if (typeof indexedDB.databases !== "function") return false;
+    return (await indexedDB.databases()).some(db => db.name === name);
+}
+
+/**
+ * Copies everything from an IndexedDB store of the project VampCord was forked from into a VampCord store, once.
+ * Keys starting with the old name (eg Vencord_cloudSecret) are renamed to start with VampCord
+ */
+export async function migrateLegacyStore(legacyDbName: string, legacyStoreName: string, newStore: UseStore) {
+    if (await newStore("readonly", store => promisifyRequest(store.get(MIGRATED_KEY)))) return;
+
+    if (await databaseExists(legacyDbName)) {
+        const legacyStore = createStore(legacyDbName, legacyStoreName);
+        const [keys, values] = await legacyStore("readonly", store => Promise.all([
+            promisifyRequest(store.getAllKeys()),
+            promisifyRequest(store.getAll())
+        ]));
+
+        await newStore("readwrite", store => {
+            keys.forEach((key, i) => {
+                const newKey = typeof key === "string" && key.startsWith("Vencord")
+                    ? "VampCord" + key.slice("Vencord".length)
+                    : key;
+                store.put(values[i], newKey);
+            });
+            return promisifyRequest(store.transaction);
+        });
+    }
+
+    await newStore("readwrite", store => promisifyRequest(store.put(true, MIGRATED_KEY)));
+}
+
+/**
+ * Like createStore, but first copies over the data of the legacy store, so nothing is lost after the rename
+ */
+export function createMigratedStore(dbName: string, storeName: string, legacyDbName: string, legacyStoreName: string): UseStore {
+    const store = createStore(dbName, storeName);
+    const ready = migrateLegacyStore(legacyDbName, legacyStoreName, store)
+        .catch(err => console.error("[VampCord] Failed to migrate data from", legacyDbName, err));
+
+    return (txMode, callback) => ready.then(() => store(txMode, callback));
+}
+
 function defaultGetStore() {
     if (!defaultGetStoreFunc) {
-        defaultGetStoreFunc = createStore(!IS_REPORTER ? "VencordData" : "VencordDataReporter", "VencordStore");
+        defaultGetStoreFunc = !IS_REPORTER
+            ? createMigratedStore("VampCordData", "VampCordStore", "VencordData", "VencordStore")
+            : createStore("VampCordDataReporter", "VampCordStore");
     }
     return defaultGetStoreFunc;
 }

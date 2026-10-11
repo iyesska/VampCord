@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -49,18 +49,18 @@ function patchLatest() {
         if (latestVersion === currentVersion) return;
 
         const oldResources = join(discordPath, currentVersion, "resources");
-        const oldVencordAsar = join(oldResources, "app.asar");
+        const oldVampCordAsar = join(oldResources, "app.asar");
 
         const resources = join(discordPath, latestVersion, "resources");
         const newAppAsar = join(resources, "app.asar");
         const newAppAsarBackup = join(resources, "_app.asar");
 
-        if (!existsSync(oldVencordAsar) || !existsSync(newAppAsar) || existsSync(newAppAsarBackup)) return;
+        if (!existsSync(oldVampCordAsar) || !existsSync(newAppAsar) || existsSync(newAppAsarBackup)) return;
 
         console.info(`[VampCord] Detected Host Update (${currentVersion} -> ${latestVersion}). Repatching...`);
 
         renameSync(newAppAsar, newAppAsarBackup);
-        copyFileSync(oldVencordAsar, newAppAsar);
+        copyFileSync(oldVampCordAsar, newAppAsar);
     } catch (err) {
         console.error("[VampCord] Failed to repatch latest host update", err);
     }

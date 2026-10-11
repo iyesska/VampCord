@@ -1,5 +1,5 @@
 /*
- * Vencord, a Discord client mod
+ * VampCord, a Discord client mod
  * Copyright (c) 2024 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -126,7 +126,7 @@ export default definePlugin({
             this.ctrl.abort();
             this.ctrl = new AbortController();
             window.addEventListener("message", ({ data }) => {
-                if (data?.type === "vencord:keybinds" && _keybinds) {
+                if (data?.type === "vampcord:keybinds" && _keybinds) {
                     const { meta } = data;
                     if (meta in _keybinds) _keybinds[meta].onTrigger();
                 }

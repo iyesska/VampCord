@@ -1,5 +1,5 @@
 /*
- * Vencord, a Discord client mod
+ * VampCord, a Discord client mod
  * Copyright (c) 2025 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -9,8 +9,8 @@ import { UploadIcon } from "@components/Icons";
 import { Devs } from "@utils/constants";
 import { pluralise } from "@utils/misc";
 import definePlugin from "@utils/types";
-import { Message } from "@vencord/discord-types";
-import { MessageFlags, MessageType } from "@vencord/discord-types/enums";
+import { Message } from "@vampcord/discord-types";
+import { MessageFlags, MessageType } from "@vampcord/discord-types/enums";
 import { findByPropsLazy } from "@webpack";
 import { AuthenticationStore, ChannelStore, EditMessageStore, MessageStore, PermissionsBits, PermissionStore, RestAPI, SelectedChannelStore, showToast } from "@webpack/common";
 

@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2023 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 */
 
 import { getUniqueUsername, openUserProfile } from "@utils/discord";
-import { ChannelType, RelationshipType } from "@vencord/discord-types/enums";
+import { ChannelType, RelationshipType } from "@vampcord/discord-types/enums";
 import { UserUtils } from "@webpack/common";
 
 import settings from "./settings";

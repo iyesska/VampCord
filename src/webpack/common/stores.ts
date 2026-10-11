@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2023 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,8 +17,8 @@
 */
 
 import { ConstEnumToRuntimeEnum } from "@utils/types";
-import * as t from "@vencord/discord-types";
-import * as enums from "@vencord/discord-types/enums";
+import * as t from "@vampcord/discord-types";
+import * as enums from "@vampcord/discord-types/enums";
 import { findByCodeLazy, findByPropsLazy } from "@webpack";
 
 import { waitForStore } from "./internal";
@@ -186,5 +186,5 @@ waitForStore("ThemeStore", m => {
     ThemeStore = m;
     // Importing this directly causes all webpack commons to be imported, which can easily cause circular dependencies.
     // For this reason, use a non import access here.
-    Vencord.Api.Themes.initQuickCssThemeStore(m);
+    VampCord.Api.Themes.initQuickCssThemeStore(m);
 });

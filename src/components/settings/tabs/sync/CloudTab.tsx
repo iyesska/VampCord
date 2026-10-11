@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2023 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -73,16 +73,16 @@ function CloudSetupSection() {
             <SectionHeading text="Cloud Integrations" />
 
             <Paragraph size="md" className={Margins.bottom20}>
-                VampCord comes with a cloud integration that adds goodies like settings sync across devices.
-                It <Link href="https://vencord.dev/cloud/privacy">respects your privacy</Link>, and
-                the <Link href="https://github.com/Vencord/Backend">source code</Link> is AGPL 3.0 licensed so you
-                can host it yourself.
+                VampCord can sync your settings across devices using a cloud backend. VampCord doesn't run a
+                server for this, so you need to host the <Link href="https://github.com/Vencord/Backend">open source
+                backend</Link> yourself and enter its URL below.
             </Paragraph>
             <FormSwitch
                 key="backend"
                 title="Enable Cloud Integrations"
                 description="This will request authorization if you have not yet set up cloud integrations."
                 value={cloud.authenticated}
+                disabled={!cloud.url}
                 onChange={v => {
                     if (v)
                         authorizeCloud();
@@ -92,7 +92,7 @@ function CloudSetupSection() {
             />
             <Heading tag="h5" className={Margins.top16}>Backend URL</Heading>
             <Paragraph className={Margins.bottom8}>
-                Which backend to use when using cloud integrations.
+                The URL of your cloud backend, for example https://cloud.example.com/
             </Paragraph>
             <CheckedTextInput
                 key="backendUrl"

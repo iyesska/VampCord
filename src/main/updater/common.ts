@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,11 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export const VENCORD_FILES = [
-    IS_DISCORD_DESKTOP ? "patcher.js" : "vencordDesktopMain.js",
-    IS_DISCORD_DESKTOP ? "preload.js" : "vencordDesktopPreload.js",
-    IS_DISCORD_DESKTOP ? "renderer.js" : "vencordDesktopRenderer.js",
-    IS_DISCORD_DESKTOP ? "renderer.css" : "vencordDesktopRenderer.css",
+export const VAMPCORD_FILES = [
+    IS_DISCORD_DESKTOP ? "patcher.js" : "vampcordDesktopMain.js",
+    IS_DISCORD_DESKTOP ? "preload.js" : "vampcordDesktopPreload.js",
+    IS_DISCORD_DESKTOP ? "renderer.js" : "vampcordDesktopRenderer.js",
+    IS_DISCORD_DESKTOP ? "renderer.css" : "vampcordDesktopRenderer.css",
 ];
 
 export function serializeErrors(func: (...args: any[]) => any) {

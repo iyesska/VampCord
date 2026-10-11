@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * VampCord, a modification for Discord's desktop app
  * Copyright (c) 2023 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,10 +20,10 @@ import { isPluginEnabled } from "@api/PluginManager";
 import { definePluginSettings } from "@api/Settings";
 import { getUserSettingLazy } from "@api/UserSettings";
 import ErrorBoundary from "@components/ErrorBoundary";
-import VencordToolboxPlugin from "@plugins/vencordToolbox";
+import VampCordToolboxPlugin from "@plugins/vampcordToolbox";
 import { Devs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import { FluxStore } from "@vencord/discord-types";
+import { FluxStore } from "@vampcord/discord-types";
 import { findByPropsLazy, findComponentByCodeLazy, findStoreLazy } from "@webpack";
 import { Menu, Popout, useRef, useState, useStateFromStores } from "@webpack/common";
 
@@ -60,7 +60,7 @@ const settings = definePluginSettings({
             { label: "VampCord Toolbox", value: "TOOLBOX" }
         ],
         get hidden() {
-            return !isPluginEnabled(VencordToolboxPlugin.name);
+            return !isPluginEnabled(VampCordToolboxPlugin.name);
         }
     }
 });
@@ -106,7 +106,7 @@ function GameActivityToggleButton(props: { nameplate?: any; }) {
 
     const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-    if (location !== "PANEL" && isPluginEnabled(VencordToolboxPlugin.name)) return null;
+    if (location !== "PANEL" && isPluginEnabled(VampCordToolboxPlugin.name)) return null;
 
     const buttonProps = {
         tooltipText: showCurrentGame ? "Disable Game Activity" : "Enable Game Activity",

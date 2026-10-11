@@ -1,5 +1,5 @@
 /*
- * Vencord, a Discord client mod
+ * VampCord, a Discord client mod
  * Copyright (c) 2026 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -9,7 +9,7 @@ import { Devs } from "@utils/constants";
 import { sendMessage } from "@utils/discord";
 import { toInlineCode } from "@utils/text";
 import definePlugin from "@utils/types";
-import { CommandArgument, CommandContext, CommandOption } from "@vencord/discord-types";
+import { CommandArgument, CommandContext, CommandOption } from "@vampcord/discord-types";
 
 import { evaluateExpression, formatNumber, parseChoices, randomInt, rollDice } from "./utils";
 

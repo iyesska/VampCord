@@ -1,10 +1,10 @@
 /*
- * Vencord, a Discord client mod
+ * VampCord, a Discord client mod
  * Copyright (c) 2026 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { VENCORD_USER_AGENT } from "@shared/vencordUserAgent";
+import { VAMPCORD_USER_AGENT } from "@shared/vampcordUserAgent";
 import { Logger } from "@utils/Logger";
 import { TTLMap } from "@utils/TTLMap";
 
@@ -65,7 +65,7 @@ async function tryLookup(query: string): Promise<Record<string, any> | undefined
         limit: "1"
     });
     return await fetch("https://musicbrainz.org/ws/2/recording/?" + params + "&query=" + query, {
-        headers: { "User-Agent": VENCORD_USER_AGENT }
+        headers: { "User-Agent": VAMPCORD_USER_AGENT }
     })
         .then(res => res.ok ? res.json() : Promise.reject(new Error(`${res.status} ${res.statusText}`)))
         .then(json => json.recordings?.[0]);
