@@ -47,12 +47,12 @@ jobs:
                   go-version-file: installer/go.mod
                   cache: false
 
+            - name: Build installers
+              run: pnpm buildInstaller
+
             - name: Test installer
               run: go test ./...
               working-directory: installer
-
-            - name: Build Windows installer
-              run: pnpm buildInstaller
 
             - name: Generate plugin list
               run: pnpm generatePluginJson dist/plugins.json dist/plugin-readmes.json

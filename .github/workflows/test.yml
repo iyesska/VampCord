@@ -30,3 +30,18 @@ jobs:
 
             - name: Test if plugin structure is valid
               run: pnpm generatePluginJson
+
+            - uses: actions/setup-go@v6
+              with:
+                  go-version-file: installer/go.mod
+                  cache: false
+
+            - name: Test if installers compile
+              run: pnpm buildInstaller
+
+            - name: Test installer
+              working-directory: installer
+              run: |
+                  test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+                  for os in windows linux darwin; do GOOS=$os go vet ./...; done
+                  go test ./...
