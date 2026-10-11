@@ -241,7 +241,7 @@ page.on("console", async e => {
 
     const firstArg = await rawArgs[0]?.jsonValue();
 
-    const isVencord = firstArg === "[Vencord]";
+    const isVencord = firstArg === "[VampCord]";
     const isDebug = firstArg === "[PUP_DEBUG]";
     const isReporterMeta = firstArg === "[REPORTER_META]";
 

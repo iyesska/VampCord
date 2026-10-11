@@ -23,7 +23,7 @@ import { dirname, join } from "path";
 import { RendererSettings } from "./settings";
 import { IS_VANILLA } from "./utils/constants";
 
-console.log("[Vencord] Starting up...");
+console.log("[VampCord] Starting up...");
 
 // Our injector file at app/index.js
 const injectorPath = require.main!.filename;
@@ -133,8 +133,8 @@ if (!IS_VANILLA) {
 
     process.env.DATA_DIR = join(app.getPath("userData"), "..", "Vencord");
 } else {
-    console.log("[Vencord] Running in vanilla mode. Not loading Vencord");
+    console.log("[VampCord] Running in vanilla mode. Not loading VampCord");
 }
 
-console.log("[Vencord] Loading original Discord app.asar");
+console.log("[VampCord] Loading original Discord app.asar");
 require(require.main!.filename);
