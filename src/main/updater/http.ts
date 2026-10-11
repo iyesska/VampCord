@@ -42,6 +42,16 @@ async function githubGet<T = any>(endpoint: string) {
     });
 }
 
+// Forks that haven't published a release yet would otherwise show an update error to every user
+async function getLatestRelease() {
+    try {
+        return await githubGet("/releases/latest");
+    } catch (err) {
+        if (String(err).includes(": 404 ")) return null;
+        throw err;
+    }
+}
+
 async function calculateGitChanges() {
     const isOutdated = await fetchUpdates();
     if (!isOutdated) return [];
@@ -57,7 +67,8 @@ async function calculateGitChanges() {
 }
 
 async function fetchUpdates() {
-    const data = await githubGet("/releases/latest");
+    const data = await getLatestRelease();
+    if (!data) return false;
 
     const hash = data.name.slice(data.name.lastIndexOf(" ") + 1);
     if (hash === gitHash)

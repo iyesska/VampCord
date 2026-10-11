@@ -25,6 +25,8 @@ The cutest Discord client mod
 -   ClearURLs no longer strips legitimate URL params (eg `width` or `month` on Amazon links)
 -   TextReplace keeps slashes in plain rules like `https://x.com/i` instead of mistaking them for regex flags
 -   PreviewMessage frees attachment previews when the plugin is turned off
+-   The updater no longer shows an error while no release has been published yet
+-   Windows installer with an interactive menu, see below
 
 ## Installing / Uninstalling
 

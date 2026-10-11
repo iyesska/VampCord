@@ -17,7 +17,7 @@ export function NotificationSection() {
         <section className={Margins.top16}>
             <Forms.FormTitle tag="h5">Notifications</Forms.FormTitle>
             <Forms.FormText className={Margins.bottom8}>
-                Settings for Notifications sent by Vencord.
+                Settings for Notifications sent by VampCord.
                 This does NOT include Discord notifications (messages, etc)
             </Forms.FormText>
             <Flex>

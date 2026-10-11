@@ -45,7 +45,7 @@ function VesktopSection() {
         <Flex className={Margins.bottom20} flexDirection="column" gap="1em">
             <Card variant="info">
                 <HeadingSecondary>Vesktop & VampCord</HeadingSecondary>
-                <Paragraph>Vesktop and Vencord are two separate things. This updater is for Vencord.</Paragraph>
+                <Paragraph>Vesktop and VampCord are two separate things. This updater is for VampCord.</Paragraph>
                 <Paragraph className={Margins.top8}>
                     You receive separate popups for Vesktop updates. You can also manually update by installing the <Link href="https://vesktop.dev/install">latest version</Link>.
                 </Paragraph>
