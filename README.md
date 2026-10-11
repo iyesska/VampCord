@@ -19,6 +19,13 @@ The cutest Discord client mod
 -   Settings sync: Keep your plugins and their settings synchronised between devices / apps (optional)
 
 
+## What's new in VampCord
+
+-   **UtilityCommands** plugin: `/roll`, `/coinflip`, `/choose` and a safe `/calc` calculator
+-   ClearURLs no longer strips legitimate URL params (eg `width` or `month` on Amazon links)
+-   TextReplace keeps slashes in plain rules like `https://x.com/i` instead of mistaking them for regex flags
+-   PreviewMessage frees attachment previews when the plugin is turned off
+
 ## Installing / Uninstalling
 
 See the [upstream Vencord instructions](https://docs.vencord.dev/installing/) and build from this repository:
