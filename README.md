@@ -10,7 +10,13 @@ Vencord contributors.
 
 ## Features
 
--   100+ built in plugins, including VampCord's own **UtilityCommands** (`/roll`, `/coinflip`, `/choose` and a safe `/calc`)
+-   **SecretMessages**: end-to-end encrypted messages right inside Discord. Turn on secret mode with the 🔒 button and
+    everything you send is encrypted with AES-256. Only friends using VampCord with the same passphrase can read it,
+    Discord only sees scrambled text
+-   **Scheduler**: schedule messages (`/schedule message:... at:18:30`) and set reminders (`/remind about:... in:2h`),
+    which survive restarting Discord
+-   **UtilityCommands**: `/roll`, `/coinflip`, `/choose` and a safe `/calc`
+-   100+ more built in plugins
 -   Own installer for Windows, Linux and macOS
 -   Own updates: installed copies update themselves from this repository's releases, and VampCord re-applies itself after Discord updates
 -   Own data folder (`VampCord`), so it never clashes with a Vencord install. Your Vencord settings and themes are copied over the first time
